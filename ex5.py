@@ -112,6 +112,16 @@ def get_complete_proper_nouns(head):
             lst.append(token)
     return lst + [head]
 
+def extract_relations(doc):
+    triplets = []
+
+    for sent in doc.sents:
+        heads = find_poroper_nouns_heads(sent)
+        complete_proper_nouns = []
+        for head in heads:
+            complete_proper_nouns.append(get_complete_proper_nouns(head))
+
+
 
 
 
