@@ -103,6 +103,7 @@ def find_proper_noun_heads(doc):
         if token.pos_ == "PROPN" and token.dep_ != "compound":
             lst.append(token.head)
     return lst
+
 def get_complete_proper_noun(head):
     lst = []
     for token in head.children:
@@ -166,5 +167,12 @@ analyzed_doc = extract_from_wikipedia(title)
 triplets_pos = extract_relations(analyzed_doc)
 
 triplets_trees = extract_relations_dependency(analyzed_doc)
+# Test on a simple example
+text = "John Smith met with Mary Johnson. Barack Obama appointed Hillary Clinton."
+doc = nlp(text)
+triplets = extract_relations_dependency(doc)
+for subj, rel, obj in triplets:
+    print(f"({subj}, {rel}, {obj})")
+
 
 print(triplets_trees)
