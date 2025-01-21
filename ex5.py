@@ -91,10 +91,7 @@ def extract_from_wikipedia(title):
         doc = nlp(page)
 
         # Process sentence by sentence to keep things manageable
-        triplets = []
-        for sent in doc.sents:
-            triplets.extend(extract_relations(sent))
-
+        triplets = extract_relations(doc)
         return triplets
 
     except wikipedia.exceptions.WikipediaException as e:
@@ -106,5 +103,6 @@ def extract_from_wikipedia(title):
 nlp = spacy.load("en_core_web_sm")
 title = "Bradley Pitt"
 triplets = extract_from_wikipedia(title)
+
 for subj, rel, obj in triplets:
     print(f"({subj}, {rel}, {obj})")
