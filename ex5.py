@@ -89,37 +89,70 @@ def extract_from_wikipedia(title):
     try:
         page = wikipedia.page(title).content
         doc = nlp(page)
+        return doc
 
-        # Process sentence by sentence to keep things manageable
-        triplets = extract_relations(doc)
-        return triplets
 
     except wikipedia.exceptions.WikipediaException as e:
         print(f"Error fetching page {title}: {e}")
         return []
 
 
-def find_poroper_nouns_heads(doc):
+def find_proper_noun_heads(doc):
     lst = []
     for token in doc:
         if token.pos_ == "PROPN" and token.dep_ != "compound":
             lst.append(token.head)
     return lst
-def get_complete_proper_nouns(head):
+def get_complete_proper_noun(head):
     lst = []
     for token in head.children:
         if token.dep_ == "compound":
             lst.append(token)
     return lst + [head]
 
-def extract_relations(doc):
+
+def extract_relations_dependency(doc):
     triplets = []
 
+    # Process sentence by sentence
     for sent in doc.sents:
-        heads = find_poroper_nouns_heads(sent)
-        complete_proper_nouns = []
-        for head in heads:
-            complete_proper_nouns.append(get_complete_proper_nouns(head))
+        # Find all proper noun heads in this sentence
+        heads = find_proper_noun_heads(sent)
+
+        # Look at each pair of heads
+        for h1 in heads:
+            for h2 in heads:
+                if h1 != h2:
+                    # Get the complete proper nouns
+                    noun1 = get_complete_proper_noun(h1)
+                    noun2 = get_complete_proper_noun(h2)
+
+                    # Check condition #1: same head with nsubj and dobj
+                    if (h1.head == h2.head and
+                            h1.dep_ == "nsubj" and
+                            h2.dep_ == "dobj"):
+                        # The relation is the shared head
+                        relation = h1.head
+                        triplets.append((
+                            " ".join(t.text for t in noun1),
+                            relation.text,
+                            " ".join(t.text for t in noun2)
+                        ))
+
+                    # Check condition #2: nsubj + prep + pobj pattern
+                    elif (h1.dep_ == "nsubj" and
+                          h2.dep_ == "pobj" and
+                          h2.head.dep_ == "prep" and
+                          h2.head.head == h1.head):
+                        # The relation is head + preposition
+                        relation = f"{h1.head.text} {h2.head.text}"
+                        triplets.append((
+                            " ".join(t.text for t in noun1),
+                            relation,
+                            " ".join(t.text for t in noun2)
+                        ))
+
+    return triplets
 
 
 
@@ -129,4 +162,9 @@ def extract_relations(doc):
 # Example usage
 nlp = spacy.load("en_core_web_sm")
 title = "Bradley Pitt"
-triplets_pos = extract_from_wikipedia(title)
+analyzed_doc = extract_from_wikipedia(title)
+triplets_pos = extract_relations(analyzed_doc)
+
+triplets_trees = extract_relations_dependency(analyzed_doc)
+
+print(triplets_trees)
