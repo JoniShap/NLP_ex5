@@ -156,23 +156,104 @@ def extract_relations_dependency(doc):
     return triplets
 
 
+import random
+from collections import defaultdict
+
+
+def evaluate_extractors(titles):
+    """
+    Evaluate both extractors on given Wikipedia pages
+
+    Args:
+        titles (list): List of Wikipedia page titles to analyze
+    """
+    # Dictionary to store results for each extractor
+    results = defaultdict(dict)
+
+    # Process each page with both extractors
+    for title in titles:
+        try:
+            # Get page content
+            page = wikipedia.page(title).content
+            doc = nlp(page)
+
+            # Get results from both extractors
+            pos_triplets = extract_relations(doc)  # POS-based extractor
+            dep_triplets = extract_relations_dependency(doc)  # Dependency-based extractor
+
+            # Store total counts
+            results[title]['pos_count'] = len(pos_triplets)
+            results[title]['dep_count'] = len(dep_triplets)
+
+            # Get random samples for manual verification
+            if pos_triplets:
+                results[title]['pos_sample'] = random.sample(
+                    pos_triplets,
+                    min(5, len(pos_triplets))
+                )
+            if dep_triplets:
+                results[title]['dep_sample'] = random.sample(
+                    dep_triplets,
+                    min(5, len(dep_triplets))
+                )
+
+        except wikipedia.exceptions.WikipediaException as e:
+            print(f"Error processing {title}: {e}")
+            continue
+
+    return results
+
+
+
+
+# Print results in a readable format
+def print_evaluation_results(results):
+    print("\nEVALUATION RESULTS")
+    print("=" * 50)
+
+    for title in results:
+        print(f"\n{title}:")
+        print("-" * 30)
+        print(f"POS-based extractor found: {results[title]['pos_count']} triplets")
+        print(f"Dependency-based extractor found: {results[title]['dep_count']} triplets")
+
+        print("\nPOS-based samples for manual verification:")
+        for triplet in results[title].get('pos_sample', []):
+            print(f"- Subject: {triplet[0]}")
+            print(f"  Relation: {triplet[1]}")
+            print(f"  Object: {triplet[2]}")
+            print(f"  Valid? (Y/N): ")  # For manual input
+
+        print("\nDependency-based samples for manual verification:")
+        for triplet in results[title].get('dep_sample', []):
+            print(f"- Subject: {triplet[0]}")
+            print(f"  Relation: {triplet[1]}")
+            print(f"  Object: {triplet[2]}")
+            print(f"  Valid? (Y/N): ")  # For manual input
+
+
+
 
 
 
 
 # Example usage
 nlp = spacy.load("en_core_web_sm")
-title = "Bradley Pitt"
-analyzed_doc = extract_from_wikipedia(title)
-triplets_pos = extract_relations(analyzed_doc)
+# title = "Bradley Pitt"
+# analyzed_doc = extract_from_wikipedia(title)
+# triplets_pos = extract_relations(analyzed_doc)
+#
+# triplets_trees = extract_relations_dependency(analyzed_doc)
 
-triplets_trees = extract_relations_dependency(analyzed_doc)
-# Test on a simple example
-text = "John Smith met with Mary Johnson. Barack Obama appointed Hillary Clinton."
-doc = nlp(text)
-triplets = extract_relations_dependency(doc)
-for subj, rel, obj in triplets:
-    print(f"({subj}, {rel}, {obj})")
+# Run evaluation
+titles = [
+    "Donald Trump",
+    "Ruth Bader Ginsburg",
+    "J. K. Rowling"
+]
 
+results = evaluate_extractors(titles)
 
-print(triplets_trees)
+# Run and print results
+print_evaluation_results(results)
+
