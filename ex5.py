@@ -101,7 +101,7 @@ def find_proper_noun_heads(doc):
     lst = []
     for token in doc:
         if token.pos_ == "PROPN" and token.dep_ != "compound":
-            lst.append(token.head)
+            lst.append(token)
     return lst
 
 def get_complete_proper_noun(head):
