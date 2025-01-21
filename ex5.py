@@ -105,6 +105,15 @@ def find_poroper_nouns_heads(doc):
         if token.pos_ == "PROPN" and token.dep_ != "compound":
             lst.append(token.head)
     return lst
+def get_complete_proper_nouns(head):
+    lst = []
+    for token in head.children:
+        if token.dep_ == "compound":
+            lst.append(token)
+    return lst + [head]
+
+
+
 
 
 # Example usage
