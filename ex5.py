@@ -99,10 +99,15 @@ def extract_from_wikipedia(title):
         return []
 
 
+def find_poroper_nouns_heads(doc):
+    lst = []
+    for token in doc:
+        if token.pos_ == "PROPN" and token.dep_ != "compound":
+            lst.append(token.head)
+    return lst
+
+
 # Example usage
 nlp = spacy.load("en_core_web_sm")
 title = "Bradley Pitt"
-triplets = extract_from_wikipedia(title)
-
-for subj, rel, obj in triplets:
-    print(f"({subj}, {rel}, {obj})")
+triplets_pos = extract_from_wikipedia(title)
